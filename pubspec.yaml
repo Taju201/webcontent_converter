@@ -11,7 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
   puppeteer: ^3.25.1
-  flutter_inappwebview: ^6.1.5
+  # 6.2.0-beta.x is the first release implementing native Windows createPdf,
+  # which lets contentToPDF render via WebView2 instead of falling back to
+  # Chrome/Puppeteer (the fallback opens a visible blank window on Chrome 132+).
+  flutter_inappwebview: ^6.2.0-beta.3
   dio: ^5.3.2
   easy_logger: ^0.0.2
   js: ^0.7.2

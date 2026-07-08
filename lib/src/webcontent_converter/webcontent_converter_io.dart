@@ -46,8 +46,13 @@ class WebcontentConverter {
     if (io.Platform.isLinux || io.Platform.isWindows) {
       if (WebViewHelper.isChromeAvailable) {
         windowBrower ??= await pp.puppeteer.launch(
+          // Chrome 132+ removed the legacy `--headless` mode, so puppeteer's
+          // `headless: true` (bare `--headless`) now launches a visible blank
+          // window. Force the new headless mode explicitly instead.
+          headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
           args: [
+            "--headless=new",
             "--disable-dev-shm-usage",
             "--no-sandbox",
           ],
@@ -220,10 +225,13 @@ class WebcontentConverter {
             /// if window browser is null
             if (windowBrower == null || windowBrower?.isConnected != true) {
               windowBrower = await pp.puppeteer.launch(
-                headless: true,
+                // Force new headless mode (Chrome 132+ dropped the legacy
+                // `--headless`, which now opens a visible blank window).
+                headless: false,
                 executablePath:
                     executablePath ?? WebViewHelper.executablePath(),
                 args: [
+                  "--headless=new",
                   "--disable-dev-shm-usage",
                   "--no-sandbox",
                 ],
@@ -602,7 +610,24 @@ class WebcontentConverter {
               functionBody: 'await document.fonts.ready;',
             );
             final bytes = await controller.createPdf(
-              pdfConfiguration: iaw.PDFConfiguration(),
+              pdfConfiguration: iaw.PDFConfiguration(
+                // Windows WebView2 defaults to an 8.5"x11" page. For narrow
+                // thermal receipts that enlarges the content and clips the
+                // right edge, so pin the page to the requested paper size
+                // (inches) to match the previous Puppeteer output.
+                settings: iaw.PrintJobSettings(
+                  pageWidth: format.width.toDouble(),
+                  pageHeight: format.height.toDouble(),
+                  margins: EdgeInsets.fromLTRB(
+                    margins.left.toDouble(),
+                    margins.top.toDouble(),
+                    margins.right.toDouble(),
+                    margins.bottom.toDouble(),
+                  ),
+                  shouldPrintBackgrounds: true,
+                  shouldPrintHeaderAndFooter: false,
+                ),
+              ),
             );
             completer.complete(bytes);
           } catch (e) {
@@ -644,9 +669,11 @@ class WebcontentConverter {
     try {
       if (windowBrower == null || windowBrower?.isConnected != true) {
         windowBrower = await pp.puppeteer.launch(
-          headless: true,
+          // Force new headless mode (Chrome 132+ dropped the legacy
+          // `--headless`, which now opens a visible blank window).
+          headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
-          args: ["--disable-dev-shm-usage", "--no-sandbox"],
+          args: ["--headless=new", "--disable-dev-shm-usage", "--no-sandbox"],
           defaultViewport: LaunchOptions.viewportNotSpecified,
           ignoreDefaultArgs: ["--enable-automation"],
         );
@@ -691,9 +718,11 @@ class WebcontentConverter {
     try {
       if (windowBrower == null || windowBrower?.isConnected != true) {
         windowBrower = await pp.puppeteer.launch(
-          headless: true,
+          // Force new headless mode (Chrome 132+ dropped the legacy
+          // `--headless`, which now opens a visible blank window).
+          headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
-          args: ["--disable-dev-shm-usage", "--no-sandbox"],
+          args: ["--headless=new", "--disable-dev-shm-usage", "--no-sandbox"],
           defaultViewport: LaunchOptions.viewportNotSpecified,
           ignoreDefaultArgs: ["--enable-automation"],
         );
