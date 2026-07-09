@@ -436,23 +436,12 @@ class WebcontentConverter {
           result = savedPath;
         }
       } else if (io.Platform.isWindows) {
-        WebcontentConverter.logger.info("Windows: trying HeadlessInAppWebView");
-        try {
-          final bytes = await _generatePdfViaInAppWebView(
-            content: content,
-            margins: _margins,
-            format: format,
-            duration: duration,
-          );
-          if (bytes != null) {
-            await io.File(savedPath).writeAsBytes(bytes);
-            result = savedPath;
-          }
-        } catch (e) {
-          WebcontentConverter.logger.warning(
-            "[contentToPDF] WebView2 unavailable, falling back to Puppeteer: $e",
-          );
-          if (WebViewHelper.isChromeAvailable) {
+        // Prefer Chrome/Puppeteer on Windows — it renders noticeably faster
+        // than WebView2 createPdf. Fall back to WebView2 only when Chrome
+        // isn't installed (or if the Chrome render fails).
+        if (WebViewHelper.isChromeAvailable) {
+          WebcontentConverter.logger.info("Windows: using Puppeteer (Chrome)");
+          try {
             result = await _contentToPDFViaPuppeteer(
               content: content,
               savedPath: savedPath,
@@ -462,8 +451,33 @@ class WebcontentConverter {
               executablePath: executablePath,
               ppWaits: ppWaits,
             );
-          } else {
-            rethrow;
+          } catch (e) {
+            WebcontentConverter.logger.warning(
+              "[contentToPDF] Puppeteer failed, falling back to WebView2: $e",
+            );
+            final bytes = await _generatePdfViaInAppWebView(
+              content: content,
+              margins: _margins,
+              format: format,
+              duration: duration,
+            );
+            if (bytes != null) {
+              await io.File(savedPath).writeAsBytes(bytes);
+              result = savedPath;
+            }
+          }
+        } else {
+          WebcontentConverter.logger
+              .info("Windows: using HeadlessInAppWebView (WebView2)");
+          final bytes = await _generatePdfViaInAppWebView(
+            content: content,
+            margins: _margins,
+            format: format,
+            duration: duration,
+          );
+          if (bytes != null) {
+            await io.File(savedPath).writeAsBytes(bytes);
+            result = savedPath;
           }
         }
       } else if ((io.Platform.isMacOS || io.Platform.isWindows || io.Platform.isLinux )&& WebViewHelper.isChromeAvailable) {
@@ -539,19 +553,11 @@ class WebcontentConverter {
           duration: duration,
         );
       } else if (io.Platform.isWindows) {
-        WebcontentConverter.logger.info("Windows: trying HeadlessInAppWebView");
-        try {
-          result = await _generatePdfViaInAppWebView(
-            content: content,
-            margins: _margins,
-            format: format,
-            duration: duration,
-          );
-        } catch (e) {
-          WebcontentConverter.logger.warning(
-            "[contentToPDFImage] WebView2 unavailable, falling back to Puppeteer: $e",
-          );
-          if (WebViewHelper.isChromeAvailable) {
+        // Prefer Chrome/Puppeteer on Windows (faster than WebView2 createPdf);
+        // fall back to WebView2 when Chrome isn't installed or the render fails.
+        if (WebViewHelper.isChromeAvailable) {
+          WebcontentConverter.logger.info("Windows: using Puppeteer (Chrome)");
+          try {
             result = await _contentToPDFImageViaPuppeteer(
               content: content,
               margins: _margins,
@@ -560,9 +566,26 @@ class WebcontentConverter {
               executablePath: executablePath,
               ppWaits: ppWaits,
             );
-          } else {
-            rethrow;
+          } catch (e) {
+            WebcontentConverter.logger.warning(
+              "[contentToPDFImage] Puppeteer failed, falling back to WebView2: $e",
+            );
+            result = await _generatePdfViaInAppWebView(
+              content: content,
+              margins: _margins,
+              format: format,
+              duration: duration,
+            );
           }
+        } else {
+          WebcontentConverter.logger
+              .info("Windows: using HeadlessInAppWebView (WebView2)");
+          result = await _generatePdfViaInAppWebView(
+            content: content,
+            margins: _margins,
+            format: format,
+            duration: duration,
+          );
         }
       } else if (io.Platform.isLinux && WebViewHelper.isChromeAvailable) {
         WebcontentConverter.logger.info("Linux: using Puppeteer");
