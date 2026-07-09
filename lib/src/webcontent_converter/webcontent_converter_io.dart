@@ -53,7 +53,7 @@ class WebcontentConverter {
           executablePath: executablePath ?? WebViewHelper.executablePath(),
           args: [
             "--headless=new",
-            "--window-position=-32000,-32000",
+            "--window-position=-2400,-2400",
             "--window-size=1,1",
             "--disable-dev-shm-usage",
             "--no-sandbox",
@@ -234,7 +234,7 @@ class WebcontentConverter {
                     executablePath ?? WebViewHelper.executablePath(),
                 args: [
                   "--headless=new",
-                  "--window-position=-32000,-32000",
+                  "--window-position=-2400,-2400",
                   "--window-size=1,1",
                   "--disable-dev-shm-usage",
                   "--no-sandbox",
@@ -705,7 +705,7 @@ class WebcontentConverter {
           executablePath: executablePath ?? WebViewHelper.executablePath(),
           args: [
             "--headless=new",
-            "--window-position=-32000,-32000",
+            "--window-position=-2400,-2400",
             "--window-size=1,1",
             "--disable-dev-shm-usage",
             "--no-sandbox",
@@ -763,7 +763,7 @@ class WebcontentConverter {
           executablePath: executablePath ?? WebViewHelper.executablePath(),
           args: [
             "--headless=new",
-            "--window-position=-32000,-32000",
+            "--window-position=-2400,-2400",
             "--window-size=1,1",
             "--disable-dev-shm-usage",
             "--no-sandbox",
