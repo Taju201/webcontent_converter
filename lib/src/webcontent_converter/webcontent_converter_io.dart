@@ -46,13 +46,15 @@ class WebcontentConverter {
     if (io.Platform.isLinux || io.Platform.isWindows) {
       if (WebViewHelper.isChromeAvailable) {
         windowBrower ??= await pp.puppeteer.launch(
-          // Chrome 132+ removed the legacy `--headless` mode, so puppeteer's
-          // `headless: true` (bare `--headless`) now launches a visible blank
-          // window. Force the new headless mode explicitly instead.
+          // Chrome 132+ removed the legacy `--headless`, and recent Chrome
+          // shows a blank window even for `--headless=new`. Use new headless
+          // and park the window off-screen so it's never visible.
           headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
           args: [
             "--headless=new",
+            "--window-position=-32000,-32000",
+            "--window-size=1,1",
             "--disable-dev-shm-usage",
             "--no-sandbox",
           ],
@@ -225,13 +227,15 @@ class WebcontentConverter {
             /// if window browser is null
             if (windowBrower == null || windowBrower?.isConnected != true) {
               windowBrower = await pp.puppeteer.launch(
-                // Force new headless mode (Chrome 132+ dropped the legacy
-                // `--headless`, which now opens a visible blank window).
+                // New headless + off-screen window (recent Chrome shows a blank
+                // window even with `--headless=new`).
                 headless: false,
                 executablePath:
                     executablePath ?? WebViewHelper.executablePath(),
                 args: [
                   "--headless=new",
+                  "--window-position=-32000,-32000",
+                  "--window-size=1,1",
                   "--disable-dev-shm-usage",
                   "--no-sandbox",
                 ],
@@ -669,11 +673,20 @@ class WebcontentConverter {
     try {
       if (windowBrower == null || windowBrower?.isConnected != true) {
         windowBrower = await pp.puppeteer.launch(
-          // Force new headless mode (Chrome 132+ dropped the legacy
-          // `--headless`, which now opens a visible blank window).
+          // Chrome 132+ dropped the legacy `--headless`, and on recent Chrome
+          // versions even `--headless=new` briefly shows a blank window. Keep
+          // new headless for correct rendering and park the window far
+          // off-screen so it is never visible. The PDF is produced from the
+          // paper format, not the window, so this doesn't affect output.
           headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
-          args: ["--headless=new", "--disable-dev-shm-usage", "--no-sandbox"],
+          args: [
+            "--headless=new",
+            "--window-position=-32000,-32000",
+            "--window-size=1,1",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+          ],
           defaultViewport: LaunchOptions.viewportNotSpecified,
           ignoreDefaultArgs: ["--enable-automation"],
         );
@@ -718,11 +731,20 @@ class WebcontentConverter {
     try {
       if (windowBrower == null || windowBrower?.isConnected != true) {
         windowBrower = await pp.puppeteer.launch(
-          // Force new headless mode (Chrome 132+ dropped the legacy
-          // `--headless`, which now opens a visible blank window).
+          // Chrome 132+ dropped the legacy `--headless`, and on recent Chrome
+          // versions even `--headless=new` briefly shows a blank window. Keep
+          // new headless for correct rendering and park the window far
+          // off-screen so it is never visible. The PDF is produced from the
+          // paper format, not the window, so this doesn't affect output.
           headless: false,
           executablePath: executablePath ?? WebViewHelper.executablePath(),
-          args: ["--headless=new", "--disable-dev-shm-usage", "--no-sandbox"],
+          args: [
+            "--headless=new",
+            "--window-position=-32000,-32000",
+            "--window-size=1,1",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+          ],
           defaultViewport: LaunchOptions.viewportNotSpecified,
           ignoreDefaultArgs: ["--enable-automation"],
         );
